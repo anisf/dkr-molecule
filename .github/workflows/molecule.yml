@@ -1,0 +1,70 @@
+name: "anisf.dockerfiles.molecule"
+
+on:
+  push:
+    paths:
+      - '**'
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible_version:
+        - 2.10.7
+        - 3.3.0
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Build molecule image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: .
+          file: ./Dockerfile
+          tags: anisfathallah/molecule:${{ matrix.ansible_version }}
+          build-args: |
+            ANSIBLE_VERSION=${{ matrix.ansible_version }}
+
+      - name: Test builded image
+        uses: addnab/docker-run-action@v1
+        with:
+          image: anisfathallah/molecule:${{ matrix.ansible_version }}
+          options: -v ${{github.workspace}}:/workspace
+          run: |
+            id
+            cd /workspace
+            echo $PATH
+            pip install -r tests/python_requirements.txt
+            ansible-galaxy install -r tests/ansible_requirements.yml
+            yamllint --version
+            ansible-lint --version
+            molecule --version
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'anisfathallah/ansible:${{ matrix.ansible_version }}'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+...

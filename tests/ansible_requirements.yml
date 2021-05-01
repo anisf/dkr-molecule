@@ -1,0 +1,10 @@
+---
+
+roles:
+  - name: elastic.elasticsearch
+    version: 7.9.3
+
+collections:
+  - name: klusters.system
+
+...
