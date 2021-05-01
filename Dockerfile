@@ -5,7 +5,8 @@ ARG ANSIBLE_VERSION
 ENV ANSIBLE_VERSION=${ANSIBLE_VERSION}
 LABEL ansible_version=${ANSIBLE_VERSION}
 
-RUN pip install --no-cache-dir ansible==$ANSIBLE_VERSION molecule[docker] yamllint ansible-lint \
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y docker.io \
+    && pip install --no-cache-dir ansible==$ANSIBLE_VERSION molecule[docker] yamllint ansible-lint \
     && adduser --system ansible \
     && apt update && DEBIAN_FRONTEND=noninteractive apt install -y git \
     && rm -rf /var/lib/apt/lists/* /var/cache/*

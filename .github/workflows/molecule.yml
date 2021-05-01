@@ -48,7 +48,6 @@ jobs:
             id
             cd /workspace
             echo $PATH
-            pip install -r tests/python_requirements.txt
             ansible-galaxy install -r tests/ansible_requirements.yml
             yamllint --version
             ansible-lint --version
@@ -57,7 +56,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'anisfathallah/ansible:${{ matrix.ansible_version }}'
+          image-ref: 'anisfathallah/molecule:${{ matrix.ansible_version }}'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
