@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '**'
+  schedule:
+    # Run at 18h37 every 15th of the month
+    - cron:  '37 18 15 * *'
 jobs:
   main:
     runs-on: ubuntu-latest
